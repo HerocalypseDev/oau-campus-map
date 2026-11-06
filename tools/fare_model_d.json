@@ -1,0 +1,28 @@
+{
+ "tiers": [
+  [
+   1247,
+   100
+  ],
+  [
+   2788,
+   200
+  ],
+  [
+   null,
+   300
+  ]
+ ],
+ "adjust": {
+  "DSA/Ajose/Faculty of Agric": 100,
+  "Religious Ground": 100
+ },
+ "minFare": 100,
+ "maxFare": 300,
+ "looAccuracy": {
+  "A: distance only": 0.631578947368421,
+  "B: distance + extra-charge places": 0.7368421052631579,
+  "C: fixed tiers 1.3/2.7 km": 0.7894736842105263,
+  "D: searched cut-offs + place adjustments": 0.8421052631578947
+ }
+}

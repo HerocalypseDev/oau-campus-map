@@ -13,11 +13,14 @@ window.CATEGORIES = {
   landmark: { label: "Landmarks",        color: "#c2410c", icon: "⭐" },
   sport:    { label: "Sports",           color: "#15803d", icon: "⚽" },
   service:  { label: "Banks & Services", color: "#4b5563", icon: "🏦" },
+  transport:{ label: "Bus Stops & Parks", color: "#0b8043", icon: "🚏" },
 };
 
 window.PLACES = [
   // Gates
-  { name: "OAU Main Gate", cat: "gate", lat: 7.49761, lng: 4.52262, aka: "entrance" },
+  { name: "OAU Main Gate", cat: "gate", lat: 7.49761, lng: 4.52262, aka: "entrance Road 1 Gate" },
+  { name: "Tonkere Gate", cat: "gate", lat: 7.52813, lng: 4.52804, aka: "Agric Ext Agric Extension" },
+  { name: "Road 7 Gate", cat: "gate", lat: 7.51656, lng: 4.54028, aka: "road seven" },
 
   // Hostels
   { name: "Moremi Hall", cat: "hostel", lat: 7.51965, lng: 4.51860, aka: "female hostel", osm: [619270924] },
@@ -63,14 +66,20 @@ window.PLACES = [
   { name: "OAU Health Centre", cat: "landmark", lat: 7.52027, lng: 4.51636, aka: "Clinic Hospital", osm: [619971213] },
   { name: "Central Science Laboratory", cat: "landmark", lat: 7.52022, lng: 4.52753, aka: "CSL", osm: [599038653] },
   { name: "Museum of Natural History", cat: "landmark", lat: 7.51657, lng: 4.52857, aka: "Museum", osm: [599038677] },
-  { name: "Civil Engineering Building", cat: "landmark", lat: 7.52308, lng: 4.52915, osm: [595564741] },
+  { name: "Civil Engineering Building", cat: "landmark", lat: 7.52294, lng: 4.52933, osm: [595564741] },
   { name: "Ogunbanjo Hall", cat: "landmark", lat: 7.52690, lng: 4.53249, osm: [618049262] },
+  { name: "Ajose", cat: "landmark", lat: 7.52145, lng: 4.52670, aka: "Ajose building DSA", osm: [595564742] },
   { name: "Religious Ground", cat: "landmark", lat: 7.51109, lng: 4.51844, aka: "church mosque chapel worship religious" },
+  { name: "New Market", cat: "landmark", lat: 7.51752, lng: 4.51215, aka: "market shops buy" },
+  { name: "Spider Building", cat: "landmark", lat: 7.52280, lng: 4.52915, aka: "Spider House" },
   { name: "OAU Staff School", cat: "landmark", lat: 7.52341, lng: 4.53396, osm: [598416497] },
 
   // Sports
   { name: "OAU Sports Centre", cat: "sport", lat: 7.51525, lng: 4.52095, aka: "Stadium", osm: [625664968] },
   { name: "Main Bowl", cat: "sport", lat: 7.51620, lng: 4.52175, aka: "Football Pitch", osm: [619270909] },
+
+  // Bus stops and parks (bus routes are set in transport.js)
+  { name: "Motor Park (Cars to Osogbo)", cat: "transport", lat: 7.49802, lng: 4.51991, aka: "park cars taxi osogbo main gate" },
 
   // Banks and services
   { name: "Access Bank", cat: "service", lat: 7.51356, lng: 4.52329, aka: "bank ATM", osm: [618765176] },

@@ -27,7 +27,9 @@
     return "the road";
   }
 
-  function Router(roads) {
+  // opts.filter(type) -> false skips that kind of road (e.g. footpaths for kekes and buses).
+  function Router(roads, opts) {
+    const keep = (opts && opts.filter) || (() => true);
     const index = new Map(); // "lat,lng" -> node id (roads that share a point are joined there)
     this.lat = []; this.lng = [];
     this.adj = [];   // per node: [neighbour, metres, edgeLabel, ...]
@@ -45,6 +47,7 @@
       return id;
     };
     for (const [name, type, flat] of roads) {
+      if (!keep(type)) continue;
       const label = name || genericName(type);
       let li = labelId.get(label);
       if (li === undefined) { li = this.labels.length; this.labels.push(label); labelId.set(label, li); }
@@ -274,6 +277,8 @@
     return top;
   };
 
+  // Roads a keke or bus can drive on.
+  Router.isDrivable = (type) => !/^(footway|path|pedestrian|steps|track|cycleway|bridleway)$/.test(type);
   Router.dist = dist;
   Router.bearing = bearing;
   root.Router = Router;

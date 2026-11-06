@@ -30,8 +30,8 @@
   const STYLE_DARK = "https://tiles.openfreemap.org/styles/dark";
   const GLYPHS = "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf";
   const LABEL_FONT = ["Noto Sans Bold"];
-  // Only editors can add places. Unlock by typing "editor:YOUR-CODE" in search. Only the SHA-256 hash is stored here.
-  const EDITOR_CODE_HASH = "6c7e63dbba860e7243b778561f6cd988342dd3271cef69865e2c190bbef08277";
+  // Only editors can add places. Tap the + button and enter the code. Only the SHA-256 hash of the code is stored here.
+  const EDITOR_CODE_HASH = "f37f3f2b0dc57a86dee4ba6ff855283bb4d2f0dea1c5bd1b708853444c2ffcec";
   const K = { settings: "oaumap.settings", saved: "oaumap.saved", recent: "oaumap.recent", mine: "oaumap.myPlaces", editor: "oaumap.editorOn", welcomed: "oaumap.welcomed" };
 
   const settings = Object.assign({
@@ -157,7 +157,7 @@
     return { type: "FeatureCollection", features: feats };
   }
 
-  const CAT_RANK = { landmark: 1, gate: 2, hostel: 3, faculty: 4, lecture: 5, sport: 6, service: 7 };
+  const CAT_RANK = { landmark: 1, gate: 2, hostel: 3, faculty: 4, lecture: 5, transport: 6, sport: 7, service: 8 };
   function labelsGeoJSON() {
     return {
       type: "FeatureCollection",
@@ -202,8 +202,10 @@
     map.addSource("oau-route-links", { type: "geojson", data: EMPTY });
     const w = (a, b) => ["interpolate", ["linear"], ["zoom"], 14, a, 18, b];
     map.addLayer({ id: "oau-route-links", type: "line", source: "oau-route-links", layout: { "line-cap": "round" }, paint: { "line-color": "#4285f4", "line-width": w(2, 4), "line-dasharray": [0.1, 2] } }, before);
-    map.addLayer({ id: "oau-route-casing", type: "line", source: "oau-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#1557b0", "line-width": w(6, 13) } }, before);
-    map.addLayer({ id: "oau-route", type: "line", source: "oau-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#4285f4", "line-width": w(4, 9) } }, before);
+    const solid = ["!=", ["get", "dotted"], true], dotted = ["==", ["get", "dotted"], true];
+    map.addLayer({ id: "oau-route-dots", type: "line", source: "oau-route", filter: dotted, layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#1a73e8", "line-width": w(3, 6), "line-dasharray": [0.1, 1.8] } }, before);
+    map.addLayer({ id: "oau-route-casing", type: "line", source: "oau-route", filter: solid, layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": ["coalesce", ["get", "casing"], "#1557b0"], "line-width": w(6, 13) } }, before);
+    map.addLayer({ id: "oau-route", type: "line", source: "oau-route", filter: solid, layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": ["coalesce", ["get", "color"], "#4285f4"], "line-width": w(4, 9) } }, before);
 
     map.addSource("oau-labels", { type: "geojson", data: labelsGeoJSON() });
     map.addLayer({
@@ -293,8 +295,11 @@
   const pad = () => nav
     ? { top: Math.round(innerHeight * 0.42), bottom: Math.min(sheetH, innerHeight * 0.5) + 20, left: 40, right: 40 }
     : { top: 120, bottom: Math.min(sheetH, innerHeight * 0.6) + 20, left: 40, right: 40 };
+  // Camera moves use an offset rather than padding: MapLibre remembers padding from easeTo and adds
+  // it to the next fitBounds, which made the map zoom out too far.
+  const padOffset = () => { const p = pad(); return [(p.left - p.right) / 2, (p.top - p.bottom) / 2]; };
   function flyToPlace(p, zoom) {
-    map.easeTo({ center: [p.lng, p.lat], zoom: Math.max(map.getZoom(), zoom || 17.2), padding: pad(), duration: 700 });
+    map.easeTo({ center: [p.lng, p.lat], zoom: Math.max(map.getZoom(), zoom || 17.2), offset: padOffset(), duration: 700 });
   }
   function fitCoords(coords, maxZoom) {
     if (!coords.length) return;
@@ -755,62 +760,237 @@
   backBtn.addEventListener("click", () => { const wasPick = pickFor; closeSearch(); if (wasPick && dirState) rerender(); });
   clearBtn.addEventListener("click", () => { searchEl.value = ""; renderSearch(); searchEl.focus(); });
 
-  // ---------- Directions ----------
+  // ---------- Directions (walk, keke, bus) ----------
   const ME = { id: "__me", name: "Your location" };
-  let dirState = null;   // { from, to, route }
+  let dirState = null;   // { from, to, mode, plans: { walk, keke, bus }, error }
+  const T = window.TRANSPORT || { keke: { speedKmh: 18, waitMin: 3 }, bus: { speedKmh: 15, waitMin: 6 }, points: {}, fares: [] };
+  const mPerMin = (kmh) => (kmh * 1000) / 60;
+  let driveRouter = null;
+  const getDrive = () => driveRouter || (driveRouter = new Router(window.ROADS || [], { filter: Router.isDrivable }));
+  const MODES = {
+    walk: { icon: "🚶", label: "Walk" },
+    keke: { icon: "🛺", label: "Keke", color: "#f29900", casing: "#b06000" },
+    bus: { icon: "🚌", label: "Bus", color: "#0b8043", casing: "#075e30" },
+  };
+  const naira = (n) => "₦" + Number(n).toLocaleString();
+
+  // ----- Fares (official list in transport.js, plus a learned estimate for other trips) -----
+  const farePlaces = () => {
+    const out = {};
+    for (const [pt, names] of Object.entries(T.points || {})) out[pt] = names.map((n) => places.find((p) => p.name === n)).filter(Boolean);
+    return out;
+  };
+  function farePointsAt(c) { // fare points near a spot, nearest first
+    const R = T.pointRadius || 350, found = [];
+    for (const [pt, ms] of Object.entries(farePlaces())) {
+      let d = Infinity;
+      for (const m of ms) d = Math.min(d, Router.dist(c.lat, c.lng, m.lat, m.lng));
+      if (d <= R) found.push([pt, d]);
+    }
+    return found.sort((a, b) => a[1] - b[1]).map((x) => x[0]);
+  }
+  function officialFare(pa, pb) {
+    for (const [a, b, f] of T.fares || []) if ((a === pa && b === pb) || (a === pb && b === pa)) return f;
+    return null;
+  }
+  function fareFor(a, b, rideMeters) {
+    const A = farePointsAt(a), B = farePointsAt(b);
+    for (const x of A) for (const y of B) { const f = officialFare(x, y); if (f != null) return { fare: f, official: true }; }
+    const e = T.estimate;
+    if (!e) return null;
+    let f = (e.tiers.find((t) => rideMeters < (t[0] == null ? Infinity : t[0])) || e.tiers[e.tiers.length - 1])[1];
+    let extra = 0;
+    for (const p of A.concat(B)) extra = Math.max(extra, (e.adjust || {})[p] || 0);
+    f = Math.min(e.max || 300, Math.max(e.min || 100, f + extra));
+    return { fare: f, official: false };
+  }
+  const fareText = (fr) => (fr ? (fr.official ? naira(fr.fare) : `about ${naira(fr.fare)}`) : "");
 
   function endCoords(x) {
     if (x === ME) return myPos ? { lat: myPos.lat, lng: myPos.lng } : null;
     return x ? { lat: x.lat, lng: x.lng } : null;
   }
 
-  function computeRoute() {
-    const st = dirState;
-    st.route = null; st.error = null;
-    const a = endCoords(st.from), b = endCoords(st.to);
-    if (!st.from || !st.to) { st.error = st.from ? "Choose a destination." : "Choose a start point."; return; }
-    if (!a || !b) { st.error = "Waiting for your location… Make sure Location is on."; return; }
-    if (st.from === st.to) { st.error = "Start and destination are the same."; return; }
-    const r = getRouter().route(a.lat, a.lng, b.lat, b.lng, st.to === ME ? "your location" : st.to.name);
-    if (!r) { st.error = "Sorry, no walking route found."; return; }
-    if (st.from === ME && r.startSnap.off > NEAR_CAMPUS_M) { st.error = "You are not near OAU campus. Choose a start point on campus."; return; }
-    if (st.to === ME && r.endSnap.off > NEAR_CAMPUS_M) { st.error = "You are not near OAU campus."; return; }
-    r.total = r.meters + r.startSnap.off + r.endSnap.off;
-    st.route = r;
-  }
-
-  function refreshRoute() {
-    if (!map.getSource("oau-route")) return;
-    const r = (nav && nav.route) || (dirState && dirState.route);
-    if (!r) { setData("oau-route", EMPTY); setData("oau-route-links", EMPTY); return; }
-    const a = nav ? myPos : endCoords(dirState.from), b = nav ? nav.dest : endCoords(dirState.to);
-    setData("oau-route", { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: r.path.map(([la, ln]) => [ln, la]) } });
-    const links = [];
-    if (a) links.push([[a.lng, a.lat], [r.startSnap.lng, r.startSnap.lat]]);
-    if (b) links.push([[r.endSnap.lng, r.endSnap.lat], [b.lng, b.lat]]);
-    setData("oau-route-links", { type: "Feature", properties: {}, geometry: { type: "MultiLineString", coordinates: links } });
-  }
-
   function mainVia(r) {
     const totals = {};
     r.steps.forEach((s) => { if (s.label && !/^the /.test(s.label)) totals[s.label] = (totals[s.label] || 0) + s.dist; });
     const best = Object.entries(totals).sort((a, b) => b[1] - a[1])[0];
-    return best ? `via ${best[0]}` : "via campus paths";
+    return best ? `via ${best[0]}` : "via campus roads";
+  }
+
+  // A walking leg between two points (uses the footpath network).
+  function walkLeg(a, b, toName) {
+    const d = Router.dist(a.lat, a.lng, b.lat, b.lng);
+    if (d < 25) return { kind: "walk", meters: d, mins: d / WALK_M_PER_MIN, path: [[a.lat, a.lng], [b.lat, b.lng]], r: null, toName };
+    const r = getRouter().route(a.lat, a.lng, b.lat, b.lng, toName);
+    if (!r) return null;
+    const meters = r.meters + r.startSnap.off + r.endSnap.off;
+    return { kind: "walk", meters, mins: meters / WALK_M_PER_MIN, path: [[a.lat, a.lng], ...r.path, [b.lat, b.lng]], r, toName };
+  }
+
+  function planWalk(a, b, destName) {
+    const r = getRouter().route(a.lat, a.lng, b.lat, b.lng, destName);
+    if (!r) return { error: "No walking route found." };
+    r.total = r.meters + r.startSnap.off + r.endSnap.off;
+    return { mode: "walk", route: r, meters: r.total, mins: r.total / WALK_M_PER_MIN, via: mainVia(r), legs: [{ kind: "walk", meters: r.total, mins: r.total / WALK_M_PER_MIN, path: r.path, r }] };
+  }
+
+  // Keke: walk to the nearest road, ride, walk from the road to the place.
+  function planKeke(a, b, destName) {
+    const v = getDrive().route(a.lat, a.lng, b.lat, b.lng, destName);
+    if (!v) return { error: "No road for a keke between these places." };
+    const pick = { lat: v.startSnap.lat, lng: v.startSnap.lng }, drop = { lat: v.endSnap.lat, lng: v.endSnap.lng };
+    const w1 = walkLeg(a, pick, `the keke pickup on ${v.startSnap.label}`);
+    const w2 = walkLeg(drop, b, destName);
+    if (!w1 || !w2) return { error: "No route found." };
+    const ride = { kind: "keke", meters: v.meters, mins: v.meters / mPerMin(T.keke.speedKmh), wait: T.keke.waitMin, path: v.path, via: mainVia(v) };
+    const plan = {
+      mode: "keke", legs: [w1, ride, w2], mins: w1.mins + ride.wait + ride.mins + w2.mins,
+      meters: w1.meters + ride.meters + w2.meters, pickup: { ...pick, label: v.startSnap.label },
+      fare: fareFor(a, b, v.meters), via: ride.via,
+    };
+    if (ride.meters < 200) plan.note = "Very short trip. Walking is easier.";
+    return plan;
+  }
+
+  // Bus: the official shuttle routes in transport.js (both directions). Board at the route's stop
+  // nearest to you, get off at the one nearest to where you are going.
+  function planBus(a, b, destName) {
+    const fp = farePlaces();
+    const near = (list, c) => list.reduce((best, p) => (!best || Router.dist(c.lat, c.lng, p.lat, p.lng) < Router.dist(c.lat, c.lng, best.lat, best.lng) ? p : best), null);
+    const options = [];
+    for (const [pa, pb, fare] of T.fares || []) {
+      for (const [P, Q] of [[pa, pb], [pb, pa]]) {
+        if (!fp[P] || !fp[Q] || !fp[P].length || !fp[Q].length) continue;
+        const board = near(fp[P], a), alight = near(fp[Q], b);
+        if (board === alight) continue;
+        // Rough time first, so only promising routes get a full calculation.
+        const rough = (Router.dist(a.lat, a.lng, board.lat, board.lng) + Router.dist(alight.lat, alight.lng, b.lat, b.lng)) * 1.3 / WALK_M_PER_MIN
+          + T.bus.waitMin + Router.dist(board.lat, board.lng, alight.lat, alight.lng) * 1.3 / mPerMin(T.bus.speedKmh);
+        options.push({ P, Q, fare, board, alight, rough });
+      }
+    }
+    if (!options.length) return { error: "No bus route here yet.", noData: true };
+    options.sort((x, z) => x.rough - z.rough);
+    let best = null;
+    for (const o of options.slice(0, 4)) {
+      const w1 = walkLeg(a, o.board, o.board.name), w2 = walkLeg(o.alight, b, destName);
+      const r = getDrive().route(o.board.lat, o.board.lng, o.alight.lat, o.alight.lng, o.alight.name);
+      if (!w1 || !w2 || !r) continue;
+      const ride = { kind: "bus", meters: r.meters, mins: r.meters / mPerMin(T.bus.speedKmh), wait: T.bus.waitMin, path: r.path, from: o.board, to: o.alight, P: o.P, Q: o.Q };
+      const mins = w1.mins + ride.wait + ride.mins + w2.mins;
+      if (!best || mins < best.mins) {
+        best = { mode: "bus", legs: [w1, ride, w2], mins, meters: w1.meters + r.meters + w2.meters, fare: { fare: o.fare, official: true },
+          pickup: { lat: o.board.lat, lng: o.board.lng, label: o.board.name }, route: `${o.P} → ${o.Q}` };
+      }
+    }
+    return best || { error: "No bus route found." };
+  }
+
+  function computeRoute() {
+    const st = dirState;
+    st.plans = {}; st.error = null;
+    const a = endCoords(st.from), b = endCoords(st.to);
+    if (!st.from || !st.to) { st.error = st.from ? "Choose a destination." : "Choose a start point."; return; }
+    if (!a || !b) { st.error = "Waiting for your location… Make sure Location is on."; return; }
+    if (st.from === st.to) { st.error = "Start and destination are the same."; return; }
+    const destName = st.to === ME ? "your location" : st.to.name;
+    const sa = getRouter().snap(a.lat, a.lng), sb = getRouter().snap(b.lat, b.lng);
+    if (st.from === ME && sa && sa.off > NEAR_CAMPUS_M) { st.error = "You are not near OAU campus. Choose a start point on campus."; return; }
+    if (st.to === ME && sb && sb.off > NEAR_CAMPUS_M) { st.error = "You are not near OAU campus."; return; }
+    st.plans.walk = planWalk(a, b, destName);
+    st.plans.keke = planKeke(a, b, destName);
+    st.plans.bus = planBus(a, b, destName);
+    st.lastMe = myPos ? { ...myPos } : null;
+  }
+  const curPlan = () => {
+    const p = dirState && dirState.plans && dirState.plans[dirState.mode];
+    return p && !p.error ? p : null;
+  };
+
+  function lineFeature(path, props) {
+    return { type: "Feature", properties: props, geometry: { type: "LineString", coordinates: path.map(([la, ln]) => [ln, la]) } };
+  }
+  function refreshRoute() {
+    if (!map.getSource("oau-route")) return;
+    const feats = [], links = [];
+    if (nav) {
+      const r = nav.route;
+      feats.push(lineFeature(r.path, {}));
+      if (myPos) links.push([[myPos.lng, myPos.lat], [r.startSnap.lng, r.startSnap.lat]]);
+      links.push([[r.endSnap.lng, r.endSnap.lat], [nav.dest.lng, nav.dest.lat]]);
+    } else {
+      const plan = curPlan();
+      if (plan && plan.mode === "walk") {
+        const r = plan.route, a = endCoords(dirState.from), b = endCoords(dirState.to);
+        feats.push(lineFeature(r.path, {}));
+        if (a) links.push([[a.lng, a.lat], [r.startSnap.lng, r.startSnap.lat]]);
+        if (b) links.push([[r.endSnap.lng, r.endSnap.lat], [b.lng, b.lat]]);
+      } else if (plan) {
+        for (const leg of plan.legs) {
+          if (leg.kind === "walk") { if (leg.meters >= 5) feats.push(lineFeature(leg.path, { dotted: true })); }
+          else feats.push(lineFeature(leg.path, { color: MODES[leg.kind].color, casing: MODES[leg.kind].casing }));
+        }
+      }
+    }
+    setData("oau-route", { type: "FeatureCollection", features: feats });
+    setData("oau-route-links", links.length ? { type: "Feature", properties: {}, geometry: { type: "MultiLineString", coordinates: links } } : EMPTY);
+  }
+
+  function legRows(plan) {
+    const rows = [];
+    const dest = dirState.to === ME ? "your location" : dirState.to.name;
+    plan.legs.forEach((leg, i) => {
+      if (leg.kind === "walk") {
+        if (leg.meters < 25) return;
+        rows.push({ i, icon: "🚶", text: `Walk to ${leg.toName}`, sub: `${fmtMins(Math.max(1, Math.round(leg.mins)))} · ${fmtDist(leg.meters)}` });
+      } else if (leg.kind === "keke") {
+        rows.push({ i, icon: "🛺", text: `Take a keke towards ${dest}`,
+          sub: `Wait ~${leg.wait} min · ride ~${Math.max(1, Math.round(leg.mins))} min · ${fmtDist(leg.meters)}${plan.fare ? " · " + fareText(plan.fare) : ""}` });
+      } else {
+        rows.push({ i, icon: "🚌", text: `Take the bus from ${leg.from.name} to ${leg.to.name}`,
+          sub: `Route ${leg.P} → ${leg.Q} · wait ~${leg.wait} min · ride ~${Math.max(1, Math.round(leg.mins))} min · ${fareText(plan.fare)}` });
+      }
+    });
+    rows.push({ i: plan.legs.length - 1, icon: "📍", text: `Arrive at ${dest}`, sub: "" });
+    return rows;
   }
 
   function dirView() {
+    const mine = dirState; // only clear the directions this view was opened for
     return {
       closable: true,
       enter() { document.body.classList.add("directions"); },
-      leave() { document.body.classList.remove("directions"); if (!nav) { dirState = null; refreshRoute(); } },
+      leave() {
+        if (dirState !== mine) return;
+        document.body.classList.remove("directions");
+        if (!nav) { dirState = null; refreshRoute(); }
+      },
       render() {
-        const st = dirState, r = st.route;
+        const st = dirState, plan = curPlan(), modeErr = st.plans[st.mode] && st.plans[st.mode].error;
         const endName = (x) => (x === ME ? "Your location" : x ? x.name : "Choose…");
         const endDot = (x) => (x === ME ? "#1a73e8" : x ? CATEGORIES[x.cat].color : "#bbb");
-        const canStart = r && st.from === ME;
+        const tab = (m) => {
+          const pl = st.plans[m];
+          const t = pl && !pl.error ? fmtMins(Math.max(1, Math.round(pl.mins))) : "–";
+          return `<button class="mode ${st.mode === m ? "on" : ""}" data-mode="${m}" aria-pressed="${st.mode === m}" aria-label="${MODES[m].label}"><span>${MODES[m].icon}</span>${t}</button>`;
+        };
+        const walkMins = st.plans.walk && !st.plans.walk.error ? st.plans.walk.mins : null;
+        const fasterNote = plan && plan.mode !== "walk" && walkMins != null && walkMins <= plan.mins ? "Walking is about as fast or faster for this trip." : "";
+        const fromMe = st.from === ME;
+        let startBtn = "";
+        if (plan) {
+          if (plan.mode === "walk") startBtn = fromMe ? `<button class="btn primary" data-act="start">${ICON.start}Start</button>` : `<button class="btn primary" data-act="start-me" ${myPos ? "" : "disabled"}>${ICON.start}Start from my location</button>`;
+          else if (fromMe) startBtn = `<button class="btn primary" data-act="start">${ICON.start}Walk to ${plan.mode === "bus" ? "bus stop" : "pickup"}</button>`;
+        }
+        const viaLine = !plan ? "" : plan.mode === "walk" ? `${esc(plan.via)} · 🚶 walking`
+          : plan.mode === "keke" ? `🛺 keke ${esc(plan.via)}${plan.fare ? ` · <b>${fareText(plan.fare)}</b>` : ""}`
+          : `🚌 ${esc(plan.route)} · <b>${fareText(plan.fare)}</b>`;
+        const fareNote = plan && plan.fare && plan.mode !== "walk"
+          ? (plan.fare.official ? "Fare from the official Students' Union (TMC) transport list." : "Estimated fare. This trip is not on the official list.") : "";
         const frag = h(`<div>
           <div class="head" style="padding-bottom:6px">
-            <div class="grow"><h2 style="font-size:18px">Walking directions</h2></div>
+            <div class="grow"><h2 style="font-size:18px">Directions</h2></div>
             <button class="icon-btn close-x" data-act="close" aria-label="Close">${ICON.close}</button>
           </div>
           <div class="dir-box">
@@ -820,28 +1000,40 @@
             </div>
             <button class="icon-btn" data-act="swap" aria-label="Swap start and destination">${ICON.swap}</button>
           </div>
-          ${r ? `
-          <div class="summary"><span class="big">${fmtMins(mins(r.total))}</span><span class="small">(${fmtDist(r.total)})</span>${st.from === ME ? `<span class="small">· arrive ${clock(new Date(Date.now() + mins(r.total) * 60000))}</span>` : ""}</div>
-          <div class="via">${esc(mainVia(r))} · 🚶 walking</div>
+          ${st.error ? "" : `<div class="modes" role="tablist">${tab("walk")}${tab("keke")}${tab("bus")}</div>`}
+          ${plan ? `
+          <div class="summary"><span class="big">${fmtMins(Math.max(1, Math.round(plan.mins)))}</span><span class="small">(${fmtDist(plan.meters)})</span>${fromMe ? `<span class="small">· arrive ${clock(new Date(Date.now() + plan.mins * 60000))}</span>` : ""}</div>
+          <div class="via">${viaLine}</div>
+          ${plan.note || fasterNote ? `<div class="via" style="color:var(--warn);margin-top:4px">${esc(plan.note || fasterNote)}</div>` : ""}
           <div class="actions peek-end">
-            ${canStart ? `<button class="btn primary" data-act="start">${ICON.start}Start</button>` : `<button class="btn primary" data-act="start-me" ${myPos ? "" : "disabled"}>${ICON.start}Start from my location</button>`}
+            ${startBtn}
             <button class="btn" data-act="steps">Steps</button>
             <button class="btn" data-act="share">${ICON.share}Share</button>
           </div>
-          <div class="section"><ol class="steps">${r.steps.map((s, i) => `<li data-step="${i}"><span class="maneuver">${TURN[s.type] || TURN.straight}</span><span class="txt">${esc(s.text)}${s.dist ? `<div class="d">${fmtDist(s.dist)}</div>` : ""}</span></li>`).join("")}</ol>
-          <p class="info" style="color:var(--muted);font-size:12px">Routes use paths mapped on OpenStreetMap. Some shortcuts may be missing.</p></div>`
-          : `<div class="info peek-end" style="padding:16px 18px;color:var(--muted)">${esc(st.error || "")}</div>`}
+          <div class="section"><ol class="steps">${plan.mode === "walk"
+            ? plan.route.steps.map((s, i) => `<li data-step="${i}"><span class="maneuver">${TURN[s.type] || TURN.straight}</span><span class="txt">${esc(s.text)}${s.dist ? `<div class="d">${fmtDist(s.dist)}</div>` : ""}</span></li>`).join("")
+            : legRows(plan).map((r) => `<li data-leg="${r.i}"><span class="maneuver" style="font-size:22px">${r.icon}</span><span class="txt">${esc(r.text)}${r.sub ? `<div class="d">${esc(r.sub)}</div>` : ""}</span></li>`).join("")}</ol>
+          <p class="info" style="color:var(--muted);font-size:12px">${plan.mode === "walk" ? "Routes use paths mapped on OpenStreetMap. Some shortcuts may be missing." : `Keke and bus times are estimates; waiting can be longer at busy hours. ${fareNote}`}</p></div>`
+          : `<div class="info peek-end" style="padding:16px 18px;color:var(--muted)">${esc(st.error || modeErr || "")}</div>`}
         </div>`);
         const root = frag.firstElementChild;
         root.addEventListener("click", (e) => {
           const step = e.target.closest("[data-step]");
-          if (step && r) {
-            const s = r.steps[+step.dataset.step];
-            const [la, ln] = r.path[Math.min(s.index, r.path.length - 1)];
-            map.easeTo({ center: [ln, la], zoom: 18, padding: pad(), duration: 600 });
+          if (step && plan) {
+            const s = plan.route.steps[+step.dataset.step];
+            const [la, ln] = plan.route.path[Math.min(s.index, plan.route.path.length - 1)];
+            map.easeTo({ center: [ln, la], zoom: 18, offset: padOffset(), duration: 600 });
             setSheetHeight(snapHeights().peek);
             return;
           }
+          const legEl = e.target.closest("[data-leg]");
+          if (legEl && plan) {
+            fitCoords(plan.legs[+legEl.dataset.leg].path.map(([la, ln]) => [ln, la]), 18);
+            setSheetHeight(snapHeights().peek);
+            return;
+          }
+          const m = e.target.closest("[data-mode]");
+          if (m) { st.mode = m.dataset.mode; settings.travelMode = st.mode; saveSettings(); buzz(8); updateDirections(true); return; }
           const b = e.target.closest("[data-act]");
           if (!b) return;
           const act = b.dataset.act;
@@ -852,7 +1044,7 @@
           else if (act === "start") startNav();
           else if (act === "start-me") { st.from = ME; updateDirections(true); startNav(); }
           else if (act === "steps") setSheetHeight(snapHeights().full);
-          else if (act === "share" && st.to && st.to !== ME) shareText(`Directions to ${st.to.name}`, `Walk to ${st.to.name} on OAU Campus Map`, appUrl({ place: st.to.id }));
+          else if (act === "share" && st.to && st.to !== ME) shareText(`Directions to ${st.to.name}`, `Get to ${st.to.name} on OAU Campus Map`, appUrl({ place: st.to.id }));
         });
         return root;
       },
@@ -862,7 +1054,7 @@
   function openDirections(from, to) {
     if (nav) return;
     closeSearch();
-    dirState = { from, to, route: null };
+    dirState = { from, to, mode: settings.travelMode || "walk", plans: {} };
     if (from === ME && !myPos) startWatching();
     computeRoute();
     showView(dirView());
@@ -877,18 +1069,19 @@
     if (!dirState) return;
     computeRoute();
     refreshRoute();
-    if (stack.length && stack[stack.length - 1].render && document.body.classList.contains("directions")) {
+    if (stack.length && document.body.classList.contains("directions")) {
       sheetBody.innerHTML = "";
       sheetBody.appendChild(stack[stack.length - 1].render());
-      requestAnimationFrame(() => setSheetHeight(snapHeights().peek));
+      setSheetHeight(snapHeights().peek);
     }
     if (fit) fitRoute();
   }
   function fitRoute() {
     refreshRoute();
-    const r = dirState && dirState.route;
-    if (!r) return;
-    const coords = r.path.map(([la, ln]) => [ln, la]);
+    const plan = curPlan();
+    if (!plan) return;
+    const coords = [];
+    plan.legs.forEach((l) => l.path.forEach(([la, ln]) => coords.push([ln, la])));
     const a = endCoords(dirState.from), b = endCoords(dirState.to);
     if (a) coords.push([a.lng, a.lat]);
     if (b) coords.push([b.lng, b.lat]);
@@ -907,15 +1100,25 @@
   }
 
   async function startNav() {
-    if (!dirState || !dirState.route) { toast((dirState && dirState.error) || "No route to start."); return; }
+    const plan = curPlan();
+    if (!plan) { toast((dirState && (dirState.error || (dirState.plans[dirState.mode] || {}).error)) || "No route to start."); return; }
     if (dirState.from !== ME) return;
-    const to = dirState.to;
-    nav = { to, dest: endCoords(to), route: dirState.route, cum: prepNavRoute(dirState.route), lastIdx: 0, offCount: 0, arrived: false, zoom: 18, pitch: 50 };
+    let to, route;
+    if (plan.mode === "walk") { to = dirState.to; route = plan.route; }
+    else {
+      const w = plan.legs[0];
+      const what = plan.mode === "bus" ? `the bus (${plan.route})` : "a keke";
+      if (!w.r) { toast(`You are at the ${plan.mode === "bus" ? "bus stop" : "pickup point"}. Wait here for ${what}.`, 5000); return; }
+      to = { name: plan.mode === "bus" ? plan.pickup.label : `Keke pickup, ${plan.pickup.label}`, lat: plan.pickup.lat, lng: plan.pickup.lng, pickup: true, msg: `Wait here for ${what}.` };
+      route = w.r;
+    }
+    if (!route.total) route.total = route.meters + route.startSnap.off + route.endSnap.off;
+    nav = { to, dest: endCoords(to), route, cum: prepNavRoute(route), lastIdx: 0, offCount: 0, arrived: false, zoom: 18, pitch: 50 };
     document.body.classList.add("navigating");
     banner.hidden = false;
     showView(navView(), { snap: "peek" });
     setFollow(compassHeading != null ? "heading" : "follow");
-    map.easeTo({ center: [myPos.lng, myPos.lat], zoom: nav.zoom, pitch: nav.pitch, padding: pad(), duration: 800 });
+    map.easeTo({ center: [myPos.lng, myPos.lat], zoom: nav.zoom, pitch: nav.pitch, offset: padOffset(), duration: 800 });
     try { if ("wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen"); } catch (e) { /* not allowed */ }
     buzz([15, 40, 15]);
     updateNav();
@@ -928,7 +1131,7 @@
     document.body.classList.remove("navigating");
     try { wakeLock && wakeLock.release(); } catch (e) { /* ignore */ }
     wakeLock = null;
-    map.easeTo({ pitch: settings.threeD ? 50 : 0, padding: pad(), duration: 600 });
+    map.easeTo({ pitch: settings.threeD ? 50 : 0, offset: padOffset(), duration: 600 });
     setFollow("none");
     closeSheet();
     dirState = null;
@@ -988,7 +1191,8 @@
       $("#nav-instr").textContent = nav.to.name;
       const t = $("#nav-time"); if (t) t.textContent = "Arrived 🎉";
       const rest = $("#nav-rest"); if (rest) rest.textContent = nav.to.name;
-      setTimeout(() => { if (nav && nav.arrived) { const p = nav.to; endNav(); openPlace(p, { fly: false }); } }, 6000);
+      if (nav.to.pickup) toast(nav.to.msg, 6000);
+      setTimeout(() => { if (nav && nav.arrived) { const p = nav.to; endNav(); if (!p.pickup) openPlace(p, { fly: false }); } }, 6000);
       return;
     }
     if (nav.arrived) return;
@@ -1077,12 +1281,12 @@
 
     if (nav) updateNav();
     else if (dirState && (dirState.from === ME || dirState.to === ME)) {
-      if (!dirState.route || !had) updateDirections(!had);
+      if (!curPlan() || !had) updateDirections(!had);
       else if (!dirState.lastMe || Router.dist(dirState.lastMe.lat, dirState.lastMe.lng, myPos.lat, myPos.lng) > 10) { dirState.lastMe = { ...myPos }; updateDirections(false); }
     }
 
     if (follow !== "none") {
-      const cam = { center: [myPos.lng, myPos.lat], bearing: follow === "heading" && heading() != null ? heading() : map.getBearing(), padding: pad(), duration: 600 };
+      const cam = { center: [myPos.lng, myPos.lat], bearing: follow === "heading" && heading() != null ? heading() : map.getBearing(), offset: padOffset(), duration: 600 };
       if (nav) { cam.zoom = nav.zoom; cam.pitch = nav.pitch; }
       map.easeTo(cam);
     }
@@ -1090,7 +1294,7 @@
       firstFix = false;
       const inside = myPos.lng > MAX_BOUNDS[0][0] && myPos.lng < MAX_BOUNDS[1][0] && myPos.lat > MAX_BOUNDS[0][1] && myPos.lat < MAX_BOUNDS[1][1];
       if (!inside) toast("You are outside OAU. Your blue dot shows when you are on campus.", 4500);
-      else if (!stack.length && follow === "none" && !wantPlace) map.easeTo({ center: [myPos.lng, myPos.lat], zoom: Math.max(map.getZoom(), 16.5), padding: pad(), duration: 900 });
+      else if (!stack.length && follow === "none" && !wantPlace) map.easeTo({ center: [myPos.lng, myPos.lat], zoom: Math.max(map.getZoom(), 16.5), offset: padOffset(), duration: 900 });
     }
   }
 
@@ -1126,7 +1330,7 @@
     let diff = Math.abs(((hd - map.getBearing() + 540) % 360) - 180);
     if (diff < 4) return;
     lastRotate = now;
-    map.easeTo({ bearing: hd, center: myPos ? [myPos.lng, myPos.lat] : undefined, padding: pad(), duration: 240, easing: (t) => t });
+    map.easeTo({ bearing: hd, center: myPos ? [myPos.lng, myPos.lat] : undefined, offset: padOffset(), duration: 240, easing: (t) => t });
   }
 
   function setFollow(mode) {
@@ -1144,10 +1348,10 @@
       toast("Map turns with your phone", 1500);
     } else if (follow === "heading") {
       setFollow("follow");
-      map.easeTo({ bearing: 0, center: [myPos.lng, myPos.lat], padding: pad(), duration: 500 });
+      map.easeTo({ bearing: 0, center: [myPos.lng, myPos.lat], offset: padOffset(), duration: 500 });
     } else {
       setFollow("follow");
-      map.easeTo({ center: [myPos.lng, myPos.lat], zoom: Math.max(map.getZoom(), 17), padding: pad(), duration: 600 });
+      map.easeTo({ center: [myPos.lng, myPos.lat], zoom: Math.max(map.getZoom(), 17), offset: padOffset(), duration: 600 });
     }
   });
   map.on("dragstart", () => { if (follow !== "none") setFollow("none"); });
@@ -1291,7 +1495,6 @@
   const isEditor = () => store.get(K.editor, "") === EDITOR_CODE_HASH;
   function setEditor(on) {
     store.set(K.editor, on ? EDITOR_CODE_HASH : "");
-    $("#addbtn").hidden = !on;
   }
   setEditor(isEditor());
   async function sha256(text) {
@@ -1306,7 +1509,44 @@
     setEditor(ok);
     toast(ok ? "Editor mode on. Tap the red + to add a place." : "Wrong code");
   }
-  $("#addbtn").addEventListener("click", () => openAdd(null));
+  $("#addbtn").addEventListener("click", async () => {
+    if (isEditor()) { openAdd(null); return; }
+    if (await askEditorCode()) openAdd(null);
+  });
+
+  // Ask for the editor code. After 5 wrong tries, wait a minute.
+  let wrongTries = 0, lockedUntil = 0;
+  function askEditorCode() {
+    return new Promise((resolve) => {
+      if (Date.now() < lockedUntil) { toast(`Too many wrong tries. Wait ${Math.ceil((lockedUntil - Date.now()) / 1000)} seconds.`); resolve(false); return; }
+      const wrap = document.createElement("div");
+      wrap.id = "dialog";
+      wrap.style.cssText = "position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:20px";
+      wrap.innerHTML = `<form class="welcome-card" role="dialog" aria-modal="true" style="text-align:left;max-width:340px">
+        <h1 style="margin-top:0">Editors only</h1>
+        <p style="color:var(--muted);line-height:1.5;margin:0 0 12px">Enter the editor code to add places to the map.</p>
+        <input id="code-in" type="password" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Code"
+          style="width:100%;font-size:22px;letter-spacing:6px;text-align:center;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg)">
+        <p id="code-err" style="color:var(--danger);font-size:13px;min-height:18px;margin:8px 0 0"></p>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+          <button type="button" class="btn" data-r="0">Cancel</button><button type="submit" class="btn primary">Unlock</button></div></form>`;
+      const done = (ok) => { wrap.remove(); resolve(ok); };
+      wrap.addEventListener("click", (e) => { if (e.target === wrap || e.target.closest("[data-r='0']")) done(false); });
+      wrap.querySelector("form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const code = wrap.querySelector("#code-in").value.trim();
+        let ok = false;
+        try { ok = (await sha256(code)) === EDITOR_CODE_HASH; } catch (err) { /* needs https */ }
+        if (ok) { wrongTries = 0; setEditor(true); toast("Editor mode on"); buzz([10, 30, 10]); done(true); return; }
+        buzz(80);
+        if (++wrongTries >= 5) { lockedUntil = Date.now() + 60000; wrongTries = 0; toast("Too many wrong tries. Wait a minute."); done(false); return; }
+        wrap.querySelector("#code-err").textContent = "Wrong code. Try again.";
+        wrap.querySelector("#code-in").select();
+      });
+      document.body.appendChild(wrap);
+      setTimeout(() => wrap.querySelector("#code-in").focus(), 50);
+    });
+  }
 
   let draft = null, draftSource = null, picking = false;
   const draftEl = document.createElement("div");
@@ -1338,7 +1578,7 @@
       enter() {
         document.body.classList.add("adding");
         if (startLngLat) setDraft(startLngLat, "map");
-        else if (myPos) { setDraft([myPos.lng, myPos.lat], "gps"); map.easeTo({ center: [myPos.lng, myPos.lat], zoom: Math.max(map.getZoom(), 18), padding: pad() }); }
+        else if (myPos) { setDraft([myPos.lng, myPos.lat], "gps"); map.easeTo({ center: [myPos.lng, myPos.lat], zoom: Math.max(map.getZoom(), 18), offset: padOffset() }); }
         else { draftSource = "gps"; startWatching(); }
       },
       leave() {
@@ -1363,7 +1603,7 @@
           if (!b) return;
           const act = b.dataset.act;
           if (act === "close") closeSheet();
-          else if (act === "gps") { if (myPos) { setDraft([myPos.lng, myPos.lat], "gps"); map.easeTo({ center: [myPos.lng, myPos.lat], zoom: 18, padding: pad() }); } else { draftSource = "gps"; startWatching(); showDraftStatus(); } }
+          else if (act === "gps") { if (myPos) { setDraft([myPos.lng, myPos.lat], "gps"); map.easeTo({ center: [myPos.lng, myPos.lat], zoom: 18, offset: padOffset() }); } else { draftSource = "gps"; startWatching(); showDraftStatus(); } }
           else if (act === "pick") { picking = true; document.body.classList.add("picking"); sheet.hidden = true; toast("Tap the building on the map"); }
           else if (act === "save") saveDraft();
         });
@@ -1484,6 +1724,6 @@
   }
 
   // For testing in the browser console.
-  window.oauMap = { map, places, byId, openPlace, openList, openDirections, startNav, endNav, ME, set3D, chooseMapType, openAdd,
+  window.oauMap = { get dir() { return dirState; }, map, places, byId, openPlace, openList, openDirections, startNav, endNav, ME, set3D, chooseMapType, openAdd,
     fakePosition: (lat, lng, acc = 8) => onPosition({ coords: { latitude: lat, longitude: lng, accuracy: acc, heading: null, speed: 0 } }) };
 })();

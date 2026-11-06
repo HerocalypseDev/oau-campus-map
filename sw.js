@@ -7,7 +7,7 @@
 // Map data: saved the first time you look at an area, then used from the phone.
 // Nothing is downloaded in advance (map servers do not allow bulk downloads).
 
-const APP_VERSION = "v4";
+const APP_VERSION = "v6";
 const APP_CACHE = "oaumap-app-" + APP_VERSION;
 const TILE_CACHE = "oaumap-tiles-v1";
 const MAX_TILE_ENTRIES = 4000;
@@ -19,6 +19,7 @@ const APP_FILES = [
   "app.js",
   "places.js",
   "router.js",
+  "transport.js",
   "data/roads.js",
   "data/buildings.js",
   "data/campus.js",

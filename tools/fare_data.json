@@ -1,0 +1,648 @@
+{
+ "rows": [
+  {
+   "from": "Road 1 Gate",
+   "to": "SUB",
+   "fromPlace": "OAU Main Gate",
+   "toPlace": "Student Union Building (SUB)",
+   "fare": 200,
+   "rideMeters": 2605,
+   "totalMeters": 2644,
+   "straightMeters": 2242
+  },
+  {
+   "from": "Road 1 Gate",
+   "to": "Market",
+   "fromPlace": "OAU Main Gate",
+   "toPlace": "New Market",
+   "fare": 300,
+   "rideMeters": 3765,
+   "totalMeters": 3765,
+   "straightMeters": 2486
+  },
+  {
+   "from": "Road 1 Gate",
+   "to": "Hall",
+   "fromPlace": "OAU Main Gate",
+   "toPlace": "Moremi Hall",
+   "fare": 300,
+   "rideMeters": 3288,
+   "totalMeters": 3342,
+   "straightMeters": 2476
+  },
+  {
+   "from": "Road 1 Gate",
+   "to": "Hall",
+   "fromPlace": "OAU Main Gate",
+   "toPlace": "Awolowo Hall",
+   "fare": 300,
+   "rideMeters": 3546,
+   "totalMeters": 3652,
+   "straightMeters": 2685
+  },
+  {
+   "from": "Road 1 Gate",
+   "to": "Hall",
+   "fromPlace": "OAU Main Gate",
+   "toPlace": "Adekunle Fajuyi Hall",
+   "fare": 300,
+   "rideMeters": 3127,
+   "totalMeters": 3221,
+   "straightMeters": 2248
+  },
+  {
+   "from": "Road 1 Gate",
+   "to": "Hall",
+   "fromPlace": "OAU Main Gate",
+   "toPlace": "ETF Hall",
+   "fare": 300,
+   "rideMeters": 3406,
+   "totalMeters": 3500,
+   "straightMeters": 2448
+  },
+  {
+   "from": "Road 1 Gate",
+   "to": "Hall",
+   "fromPlace": "OAU Main Gate",
+   "toPlace": "Angola Hall (Anglo-Moz)",
+   "fare": 300,
+   "rideMeters": 3855,
+   "totalMeters": 3947,
+   "straightMeters": 2899
+  },
+  {
+   "from": "Road 1 Gate",
+   "to": "Hall",
+   "fromPlace": "OAU Main Gate",
+   "toPlace": "Mozambique Hall (Anglo-Moz)",
+   "fare": 300,
+   "rideMeters": 3764,
+   "totalMeters": 3848,
+   "straightMeters": 2944
+  },
+  {
+   "from": "Road 1 Gate",
+   "to": "Hall",
+   "fromPlace": "OAU Main Gate",
+   "toPlace": "Alumni Hall",
+   "fare": 300,
+   "rideMeters": 3370,
+   "totalMeters": 3424,
+   "straightMeters": 2720
+  },
+  {
+   "from": "Road 1 Gate",
+   "to": "Hall",
+   "fromPlace": "OAU Main Gate",
+   "toPlace": "Postgraduate Hall",
+   "fare": 300,
+   "rideMeters": 3612,
+   "totalMeters": 3630,
+   "straightMeters": 2856
+  },
+  {
+   "from": "Road 1 Gate",
+   "to": "Religious Ground",
+   "fromPlace": "OAU Main Gate",
+   "toPlace": "Religious Ground",
+   "fare": 300,
+   "rideMeters": 2438,
+   "totalMeters": 2446,
+   "straightMeters": 1560
+  },
+  {
+   "from": "SUB",
+   "to": "Central Academic Area",
+   "fromPlace": "Student Union Building (SUB)",
+   "toPlace": "White House",
+   "fare": 100,
+   "rideMeters": 252,
+   "totalMeters": 295,
+   "straightMeters": 232
+  },
+  {
+   "from": "SUB",
+   "to": "Central Academic Area",
+   "fromPlace": "Student Union Building (SUB)",
+   "toPlace": "Faculty of Social Sciences",
+   "fare": 100,
+   "rideMeters": 498,
+   "totalMeters": 566,
+   "straightMeters": 408
+  },
+  {
+   "from": "SUB",
+   "to": "Central Academic Area",
+   "fromPlace": "Student Union Building (SUB)",
+   "toPlace": "1000 Seater Lecture Theatre",
+   "fare": 100,
+   "rideMeters": 529,
+   "totalMeters": 604,
+   "straightMeters": 381
+  },
+  {
+   "from": "SUB",
+   "to": "Central Academic Area",
+   "fromPlace": "Student Union Building (SUB)",
+   "toPlace": "Faculty of Arts",
+   "fare": 100,
+   "rideMeters": 868,
+   "totalMeters": 972,
+   "straightMeters": 367
+  },
+  {
+   "from": "SUB",
+   "to": "Spider House",
+   "fromPlace": "Student Union Building (SUB)",
+   "toPlace": "Spider House",
+   "fare": 200,
+   "rideMeters": 1591,
+   "totalMeters": 1662,
+   "straightMeters": 1026
+  },
+  {
+   "from": "SUB",
+   "to": "PG College/ICT",
+   "fromPlace": "Student Union Building (SUB)",
+   "toPlace": "Postgraduate College",
+   "fare": 100,
+   "rideMeters": 1001,
+   "totalMeters": 1071,
+   "straightMeters": 969
+  },
+  {
+   "from": "SUB",
+   "to": "Tonkere Gate/Agric Ext",
+   "fromPlace": "Student Union Building (SUB)",
+   "toPlace": "Tonkere Gate",
+   "fare": 200,
+   "rideMeters": 1845,
+   "totalMeters": 1885,
+   "straightMeters": 1354
+  },
+  {
+   "from": "SUB",
+   "to": "Road 7 Gate",
+   "fromPlace": "Student Union Building (SUB)",
+   "toPlace": "Road 7 Gate",
+   "fare": 200,
+   "rideMeters": 2448,
+   "totalMeters": 2493,
+   "straightMeters": 2092
+  },
+  {
+   "from": "SUB",
+   "to": "Market",
+   "fromPlace": "Student Union Building (SUB)",
+   "toPlace": "New Market",
+   "fare": 100,
+   "rideMeters": 1160,
+   "totalMeters": 1199,
+   "straightMeters": 1018
+  },
+  {
+   "from": "Market",
+   "to": "Ojaja",
+   "fromPlace": "New Market",
+   "toPlace": "Ojaja Hostel",
+   "fare": 100,
+   "rideMeters": 174,
+   "totalMeters": 394,
+   "straightMeters": 319
+  },
+  {
+   "from": "SUB",
+   "to": "Ojaja",
+   "fromPlace": "Student Union Building (SUB)",
+   "toPlace": "Ojaja Hostel",
+   "fare": 200,
+   "rideMeters": 1334,
+   "totalMeters": 1593,
+   "straightMeters": 1337
+  },
+  {
+   "from": "SUB",
+   "to": "Religious Ground",
+   "fromPlace": "Student Union Building (SUB)",
+   "toPlace": "Religious Ground",
+   "fare": 200,
+   "rideMeters": 1030,
+   "totalMeters": 1076,
+   "straightMeters": 814
+  },
+  {
+   "from": "Hall",
+   "to": "SUB",
+   "fromPlace": "Moremi Hall",
+   "toPlace": "Student Union Building (SUB)",
+   "fare": 100,
+   "rideMeters": 682,
+   "totalMeters": 776,
+   "straightMeters": 365
+  },
+  {
+   "from": "Hall",
+   "to": "SUB",
+   "fromPlace": "Awolowo Hall",
+   "toPlace": "Student Union Building (SUB)",
+   "fare": 100,
+   "rideMeters": 941,
+   "totalMeters": 1085,
+   "straightMeters": 794
+  },
+  {
+   "from": "Hall",
+   "to": "SUB",
+   "fromPlace": "Adekunle Fajuyi Hall",
+   "toPlace": "Student Union Building (SUB)",
+   "fare": 100,
+   "rideMeters": 522,
+   "totalMeters": 655,
+   "straightMeters": 404
+  },
+  {
+   "from": "Hall",
+   "to": "SUB",
+   "fromPlace": "ETF Hall",
+   "toPlace": "Student Union Building (SUB)",
+   "fare": 100,
+   "rideMeters": 801,
+   "totalMeters": 933,
+   "straightMeters": 742
+  },
+  {
+   "from": "Hall",
+   "to": "SUB",
+   "fromPlace": "Angola Hall (Anglo-Moz)",
+   "toPlace": "Student Union Building (SUB)",
+   "fare": 100,
+   "rideMeters": 1250,
+   "totalMeters": 1381,
+   "straightMeters": 1075
+  },
+  {
+   "from": "Hall",
+   "to": "SUB",
+   "fromPlace": "Mozambique Hall (Anglo-Moz)",
+   "toPlace": "Student Union Building (SUB)",
+   "fare": 100,
+   "rideMeters": 1159,
+   "totalMeters": 1282,
+   "straightMeters": 972
+  },
+  {
+   "from": "Hall",
+   "to": "SUB",
+   "fromPlace": "Alumni Hall",
+   "toPlace": "Student Union Building (SUB)",
+   "fare": 100,
+   "rideMeters": 765,
+   "totalMeters": 858,
+   "straightMeters": 622
+  },
+  {
+   "from": "Hall",
+   "to": "SUB",
+   "fromPlace": "Postgraduate Hall",
+   "toPlace": "Student Union Building (SUB)",
+   "fare": 100,
+   "rideMeters": 1006,
+   "totalMeters": 1063,
+   "straightMeters": 762
+  },
+  {
+   "from": "Hall",
+   "to": "Health Centre",
+   "fromPlace": "Moremi Hall",
+   "toPlace": "OAU Health Centre",
+   "fare": 100,
+   "rideMeters": 451,
+   "totalMeters": 550,
+   "straightMeters": 257
+  },
+  {
+   "from": "Hall",
+   "to": "Health Centre",
+   "fromPlace": "Awolowo Hall",
+   "toPlace": "OAU Health Centre",
+   "fare": 100,
+   "rideMeters": 163,
+   "totalMeters": 313,
+   "straightMeters": 184
+  },
+  {
+   "from": "Hall",
+   "to": "Health Centre",
+   "fromPlace": "Adekunle Fajuyi Hall",
+   "toPlace": "OAU Health Centre",
+   "fare": 100,
+   "rideMeters": 597,
+   "totalMeters": 736,
+   "straightMeters": 357
+  },
+  {
+   "from": "Hall",
+   "to": "Health Centre",
+   "fromPlace": "ETF Hall",
+   "toPlace": "OAU Health Centre",
+   "fare": 100,
+   "rideMeters": 876,
+   "totalMeters": 1014,
+   "straightMeters": 289
+  },
+  {
+   "from": "Hall",
+   "to": "Health Centre",
+   "fromPlace": "Angola Hall (Anglo-Moz)",
+   "toPlace": "OAU Health Centre",
+   "fare": 100,
+   "rideMeters": 501,
+   "totalMeters": 637,
+   "straightMeters": 461
+  },
+  {
+   "from": "Hall",
+   "to": "Health Centre",
+   "fromPlace": "Mozambique Hall (Anglo-Moz)",
+   "toPlace": "OAU Health Centre",
+   "fare": 100,
+   "rideMeters": 409,
+   "totalMeters": 538,
+   "straightMeters": 378
+  },
+  {
+   "from": "Hall",
+   "to": "Health Centre",
+   "fromPlace": "Alumni Hall",
+   "toPlace": "OAU Health Centre",
+   "fare": 100,
+   "rideMeters": 206,
+   "totalMeters": 305,
+   "straightMeters": 174
+  },
+  {
+   "from": "Hall",
+   "to": "Health Centre",
+   "fromPlace": "Postgraduate Hall",
+   "toPlace": "OAU Health Centre",
+   "fare": 100,
+   "rideMeters": 257,
+   "totalMeters": 320,
+   "straightMeters": 270
+  },
+  {
+   "from": "Hall",
+   "to": "PG College/ICT",
+   "fromPlace": "Moremi Hall",
+   "toPlace": "Postgraduate College",
+   "fare": 200,
+   "rideMeters": 1678,
+   "totalMeters": 1764,
+   "straightMeters": 1314
+  },
+  {
+   "from": "Hall",
+   "to": "PG College/ICT",
+   "fromPlace": "Awolowo Hall",
+   "toPlace": "Postgraduate College",
+   "fare": 200,
+   "rideMeters": 1936,
+   "totalMeters": 2073,
+   "straightMeters": 1754
+  },
+  {
+   "from": "Hall",
+   "to": "PG College/ICT",
+   "fromPlace": "Adekunle Fajuyi Hall",
+   "toPlace": "Postgraduate College",
+   "fare": 200,
+   "rideMeters": 1517,
+   "totalMeters": 1643,
+   "straightMeters": 1359
+  },
+  {
+   "from": "Hall",
+   "to": "PG College/ICT",
+   "fromPlace": "ETF Hall",
+   "toPlace": "Postgraduate College",
+   "fare": 200,
+   "rideMeters": 1796,
+   "totalMeters": 1921,
+   "straightMeters": 1708
+  },
+  {
+   "from": "Hall",
+   "to": "PG College/ICT",
+   "fromPlace": "Angola Hall (Anglo-Moz)",
+   "toPlace": "Postgraduate College",
+   "fare": 200,
+   "rideMeters": 2246,
+   "totalMeters": 2369,
+   "straightMeters": 2030
+  },
+  {
+   "from": "Hall",
+   "to": "PG College/ICT",
+   "fromPlace": "Mozambique Hall (Anglo-Moz)",
+   "toPlace": "Postgraduate College",
+   "fare": 200,
+   "rideMeters": 2154,
+   "totalMeters": 2270,
+   "straightMeters": 1899
+  },
+  {
+   "from": "Hall",
+   "to": "PG College/ICT",
+   "fromPlace": "Alumni Hall",
+   "toPlace": "Postgraduate College",
+   "fare": 200,
+   "rideMeters": 1760,
+   "totalMeters": 1846,
+   "straightMeters": 1535
+  },
+  {
+   "from": "Hall",
+   "to": "PG College/ICT",
+   "fromPlace": "Postgraduate Hall",
+   "toPlace": "Postgraduate College",
+   "fare": 200,
+   "rideMeters": 2002,
+   "totalMeters": 2051,
+   "straightMeters": 1656
+  },
+  {
+   "from": "Hall",
+   "to": "DSA/Ajose/Faculty of Agric",
+   "fromPlace": "Moremi Hall",
+   "toPlace": "Ajose",
+   "fare": 300,
+   "rideMeters": 1651,
+   "totalMeters": 1739,
+   "straightMeters": 916
+  },
+  {
+   "from": "Hall",
+   "to": "DSA/Ajose/Faculty of Agric",
+   "fromPlace": "Awolowo Hall",
+   "toPlace": "Ajose",
+   "fare": 300,
+   "rideMeters": 1910,
+   "totalMeters": 2048,
+   "straightMeters": 1326
+  },
+  {
+   "from": "Hall",
+   "to": "DSA/Ajose/Faculty of Agric",
+   "fromPlace": "Adekunle Fajuyi Hall",
+   "toPlace": "Ajose",
+   "fare": 300,
+   "rideMeters": 1491,
+   "totalMeters": 1618,
+   "straightMeters": 1088
+  },
+  {
+   "from": "Hall",
+   "to": "DSA/Ajose/Faculty of Agric",
+   "fromPlace": "ETF Hall",
+   "toPlace": "Ajose",
+   "fare": 300,
+   "rideMeters": 1770,
+   "totalMeters": 1896,
+   "straightMeters": 1374
+  },
+  {
+   "from": "Hall",
+   "to": "DSA/Ajose/Faculty of Agric",
+   "fromPlace": "Angola Hall (Anglo-Moz)",
+   "toPlace": "Ajose",
+   "fare": 300,
+   "rideMeters": 2219,
+   "totalMeters": 2344,
+   "straightMeters": 1571
+  },
+  {
+   "from": "Hall",
+   "to": "DSA/Ajose/Faculty of Agric",
+   "fromPlace": "Mozambique Hall (Anglo-Moz)",
+   "toPlace": "Ajose",
+   "fare": 300,
+   "rideMeters": 2127,
+   "totalMeters": 2245,
+   "straightMeters": 1396
+  },
+  {
+   "from": "Hall",
+   "to": "DSA/Ajose/Faculty of Agric",
+   "fromPlace": "Alumni Hall",
+   "toPlace": "Ajose",
+   "fare": 300,
+   "rideMeters": 1733,
+   "totalMeters": 1821,
+   "straightMeters": 1051
+  },
+  {
+   "from": "Hall",
+   "to": "DSA/Ajose/Faculty of Agric",
+   "fromPlace": "Postgraduate Hall",
+   "toPlace": "Ajose",
+   "fare": 300,
+   "rideMeters": 1975,
+   "totalMeters": 2027,
+   "straightMeters": 1138
+  },
+  {
+   "from": "Hall",
+   "to": "Religious Ground",
+   "fromPlace": "Moremi Hall",
+   "toPlace": "Religious Ground",
+   "fare": 300,
+   "rideMeters": 1521,
+   "totalMeters": 1583,
+   "straightMeters": 946
+  },
+  {
+   "from": "Hall",
+   "to": "Religious Ground",
+   "fromPlace": "Awolowo Hall",
+   "toPlace": "Religious Ground",
+   "fare": 300,
+   "rideMeters": 1780,
+   "totalMeters": 1892,
+   "straightMeters": 1127
+  },
+  {
+   "from": "Hall",
+   "to": "Religious Ground",
+   "fromPlace": "Adekunle Fajuyi Hall",
+   "toPlace": "Religious Ground",
+   "fare": 300,
+   "rideMeters": 1361,
+   "totalMeters": 1462,
+   "straightMeters": 696
+  },
+  {
+   "from": "Hall",
+   "to": "Religious Ground",
+   "fromPlace": "ETF Hall",
+   "toPlace": "Religious Ground",
+   "fare": 300,
+   "rideMeters": 1640,
+   "totalMeters": 1740,
+   "straightMeters": 898
+  },
+  {
+   "from": "Hall",
+   "to": "Religious Ground",
+   "fromPlace": "Angola Hall (Anglo-Moz)",
+   "toPlace": "Religious Ground",
+   "fare": 300,
+   "rideMeters": 2089,
+   "totalMeters": 2188,
+   "straightMeters": 1355
+  },
+  {
+   "from": "Hall",
+   "to": "Religious Ground",
+   "fromPlace": "Mozambique Hall (Anglo-Moz)",
+   "toPlace": "Religious Ground",
+   "fare": 300,
+   "rideMeters": 1998,
+   "totalMeters": 2089,
+   "straightMeters": 1385
+  },
+  {
+   "from": "Hall",
+   "to": "Religious Ground",
+   "fromPlace": "Alumni Hall",
+   "toPlace": "Religious Ground",
+   "fare": 300,
+   "rideMeters": 1603,
+   "totalMeters": 1665,
+   "straightMeters": 1171
+  },
+  {
+   "from": "Hall",
+   "to": "Religious Ground",
+   "fromPlace": "Postgraduate Hall",
+   "toPlace": "Religious Ground",
+   "fare": 300,
+   "rideMeters": 1845,
+   "totalMeters": 1870,
+   "straightMeters": 1303
+  },
+  {
+   "from": "Market",
+   "to": "Tonkere Gate/Agric Ext",
+   "fromPlace": "New Market",
+   "toPlace": "Tonkere Gate",
+   "fare": 300,
+   "rideMeters": 2972,
+   "totalMeters": 2973,
+   "straightMeters": 2110
+  }
+ ],
+ "skipped": [
+  "Road 1 Gate -> Int'l School",
+  "Hall -> Int'l School"
+ ]
+}
