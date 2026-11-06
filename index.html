@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+  <title>OAU Campus Map</title>
+  <meta name="description" content="Map of Obafemi Awolowo University, Ile-Ife: find buildings, hostels and faculties, and get walking directions.">
+  <meta name="theme-color" content="#1a73e8">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="vendor/maplibre/maplibre-gl.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="map" aria-label="Campus map"></div>
+
+  <!-- Search -->
+  <header id="top">
+    <div id="searchbar" class="card">
+      <button id="search-back" class="icon-btn" aria-label="Back" hidden>
+        <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" /></svg>
+      </button>
+      <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+      <input id="search" type="search" placeholder="Search OAU" autocomplete="off" enterkeyhint="search" aria-label="Search places">
+      <button id="search-clear" class="icon-btn" aria-label="Clear search" hidden>
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <button id="menu-btn" class="icon-btn" aria-label="Map settings">
+        <svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>
+      </button>
+    </div>
+    <div id="chips" role="toolbar" aria-label="Browse by category"></div>
+  </header>
+
+  <section id="searchpanel" hidden aria-label="Search results">
+    <div id="search-content"></div>
+  </section>
+
+  <!-- Navigation banner (turn-by-turn) -->
+  <div id="navbanner" hidden aria-live="polite">
+    <div id="nav-arrow" class="maneuver"></div>
+    <div class="nav-text">
+      <div id="nav-dist"></div>
+      <div id="nav-instr"></div>
+    </div>
+  </div>
+
+  <!-- Map buttons -->
+  <div id="fabs">
+    <button id="compass" class="fab small" aria-label="Point map north" hidden>
+      <svg viewBox="0 0 24 24"><path class="n" d="M12 3l3.5 9h-7z"/><path class="s" d="M12 21l-3.5-9h7z"/></svg>
+    </button>
+    <button id="btn-3d" class="fab small" aria-label="Toggle 3D view">3D</button>
+    <button id="addbtn" class="fab small add" aria-label="Add a place" hidden>
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+    <button id="locate" class="fab" aria-label="Show my location">
+      <svg class="ic-loc" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" class="fill"/><circle cx="12" cy="12" r="7.5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3"/></svg>
+      <svg class="ic-heading" viewBox="0 0 24 24"><path class="fill" d="M12 3l6.5 17-6.5-4-6.5 4z"/></svg>
+    </button>
+  </div>
+
+  <!-- Bottom sheet (place details, lists, directions, settings) -->
+  <section id="sheet" class="sheet" hidden aria-live="polite">
+    <div class="sheet-handle" aria-hidden="true"><span></span></div>
+    <div id="sheet-body"></div>
+  </section>
+
+  <div id="toast" role="status" hidden></div>
+
+  <!-- First-run welcome -->
+  <div id="welcome" hidden>
+    <div class="welcome-card">
+      <img src="icons/icon-192.png" alt="" width="64" height="64">
+      <h1>OAU Campus Map</h1>
+      <ul>
+        <li><b>🔎 Find any place</b><span>Hostels, faculties, lecture theatres, banks and more.</span></li>
+        <li><b>🚶 Walk there</b><span>Step-by-step walking directions that follow you as you move.</span></li>
+        <li><b>📶 Light on data</b><span>The first time, the map downloads about 2–5 MB. Places you have viewed then work offline.</span></li>
+      </ul>
+      <button id="welcome-go" class="btn primary block">Get started</button>
+      <p class="fine">The app asks for your location to show where you are. It never leaves your phone.</p>
+    </div>
+  </div>
+
+  <script src="vendor/maplibre/maplibre-gl.js"></script>
+  <script src="places.js"></script>
+  <script src="data/roads.js"></script>
+  <script src="data/buildings.js"></script>
+  <script src="data/campus.js"></script>
+  <script src="router.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
